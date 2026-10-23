@@ -5,17 +5,17 @@
 [main]	INFO	running on Python 3.13.17
 [manager]	WARNING	Test in comment: mitigated is not a test name or id, ignoring
 [manager]	WARNING	Test in comment: in is not a test name or id, ignoring
-[manager]	WARNING	Test in comment: runAsCgi is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: run_as_cgi is not a test name or id, ignoring
 [manager]	WARNING	Test in comment: HTTP_PROXY is not a test name or id, ignoring
 [manager]	WARNING	Test in comment: removed is not a test name or id, ignoring
 [manager]	WARNING	Test in comment: above is not a test name or id, ignoring
-Run started:2026-10-23 02:59:53.706842+00:00
+Run started:2026-10-23 03:01:30.264776+00:00
 
 Test results:
 	No issues identified.
 
 Code scanned:
-	Total lines of code: 102
+	Total lines of code: 120
 	Total lines skipped (#nosec): 0
 	Total potential issues skipped due to specifically being disabled (e.g., #nosec BXXX): 2
 

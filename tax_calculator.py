@@ -31,60 +31,62 @@ OLD_SLABS = [
 ]
 
 
-def slab_rate(income):
-    """Return the rate of the new-regime slab that contains the income."""
-    return next(rate for limit, rate in NEW_SLABS if income <= limit)
+def slab_tax(taxable, slabs, exemption=0):
+    """Return tax charged progressively on taxable income.
+
+    Each rate applies only to the part of the income that falls inside its
+    own slab, starting above the exemption limit.
+    """
+    total_tax = 0.0
+    lower_limit = exemption
+    for limit, rate in slabs:
+        if taxable > lower_limit and rate > 0:
+            total_tax += (min(taxable, limit) - lower_limit) * rate
+        lower_limit = max(lower_limit, limit)
+    return total_tax
 
 
 def new_regime_tax(salary):
     """Return the new-regime tax (including cess) for a salary."""
-    taxable = salary - STANDARD_DEDUCTION_NEW
-    tax_amount = taxable * slab_rate(taxable)
-    cess_amount = tax_amount * CESS
-    if taxable < REBATE_LIMIT_NEW:
-        tax_amount = 0
-    return int(tax_amount + cess_amount)
+    taxable = max(salary - STANDARD_DEDUCTION_NEW, 0)
+    tax_amount = slab_tax(taxable, NEW_SLABS)
+    if taxable <= REBATE_LIMIT_NEW:
+        tax_amount = 0  # Section 87A rebate wipes out the tax, and the cess
+    return round(tax_amount * (1 + CESS))
 
 
 def basic_exemption(age):
     """Return the old-regime basic exemption limit for an age."""
     if 60 <= age < 80:
         return 300000
-    if age > 80:
+    if age >= 80:
         return 500000
     return 250000
 
 
 def old_regime_tax(salary, age, deductions):
     """Return the old-regime tax (including cess) after deductions."""
-    taxable = salary - STANDARD_DEDUCTION_OLD
-    for section in deductions.keys():
-        taxable = taxable - deductions[section]
-    total_tax = 0
-    lower_limit = basic_exemption(age)
-    for limit, rate in OLD_SLABS:
-        if taxable > lower_limit and rate > 0:
-            total_tax = total_tax + (min(taxable, limit) - lower_limit) * rate
-        lower_limit = max(lower_limit, limit)
-    print("Last slab rate applied:", rate)
-    return int(total_tax * (1 + CESS))
+    taxable = salary - STANDARD_DEDUCTION_OLD - sum(deductions.values())
+    tax_amount = slab_tax(taxable, OLD_SLABS, basic_exemption(age))
+    return round(tax_amount * (1 + CESS))
 
 
 def better_regime(salary, age, deductions):
-    """Return "new" or "old", whichever regime the function judges better."""
+    """Return "new" or "old", whichever regime has the lower tax.
+
+    A tie goes to "new".
+    """
     new_tax = new_regime_tax(salary)
     old_tax = old_regime_tax(salary, age, deductions)
-    if new_tax > old_tax:
-        return "new"
-    return "old"
+    if old_tax < new_tax:
+        return "old"
+    return "new"
 
 
 def is_valid_pan(pan):
-    """Return True if the text looks like a PAN (AAAAA9999A)."""
-    try:
-        return bool(re.match("[A-Z]{5}[0-9]{4}[A-Z]", pan))
-    except TypeError:
-        return False
+    """Return True if the text is exactly a PAN (AAAAA9999A)."""
+    return (isinstance(pan, str)
+            and re.fullmatch(r"[A-Z]{5}[0-9]{4}[A-Z]", pan) is not None)
 
 
 def load_pan_key():
@@ -117,6 +119,8 @@ def parse_form16(xml_text):
     root = ElementTree.fromstring(xml_text)
     salary_text = root.findtext(".//salary")
     tds_text = root.findtext(".//tds")
+    if salary_text is None or tds_text is None:
+        raise ValueError("Form 16 XML must contain <salary> and <tds>")
     return int(salary_text), int(tds_text)
 
 
