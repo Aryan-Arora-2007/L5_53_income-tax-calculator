@@ -1,0 +1,86 @@
+[main]	INFO	profile include tests: None
+[main]	INFO	profile exclude tests: None
+[main]	INFO	cli include tests: None
+[main]	INFO	cli exclude tests: None
+[main]	INFO	running on Python 3.13.17
+Run started:2026-10-23 02:56:47.638897+00:00
+
+Test results:
+>> Issue: [B408:blacklist] Using minidom to parse untrusted XML data is known to be vulnerable to XML attacks. Replace minidom with the equivalent defusedxml package, or make sure defusedxml.defuse_stdlib() is called.
+   Severity: Low   Confidence: High
+   CWE: CWE-20 (https://cwe.mitre.org/data/definitions/20.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/blacklists/blacklist_imports.html#b408-import-xml-minidom
+   Location: ./tax_calculator.py:5:0
+4	import json
+5	from xml.dom import minidom
+6	from wsgiref.handlers import CGIHandler
+
+--------------------------------------------------
+>> Issue: [B412:blacklist] Consider possible security implications associated with CGIHandler module.
+   Severity: High   Confidence: High
+   CWE: CWE-284 (https://cwe.mitre.org/data/definitions/284.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/blacklists/blacklist_imports.html#b412-import-httpoxy
+   Location: ./tax_calculator.py:6:0
+5	from xml.dom import minidom
+6	from wsgiref.handlers import CGIHandler
+7	from cryptography.hazmat.primitives.asymmetric import rsa
+
+--------------------------------------------------
+>> Issue: [B305:blacklist] Use of insecure cipher mode cryptography.hazmat.primitives.ciphers.modes.ECB.
+   Severity: Medium   Confidence: High
+   CWE: CWE-327 (https://cwe.mitre.org/data/definitions/327.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/blacklists/blacklist_calls.html#b304-b305-ciphers-and-modes
+   Location: ./tax_calculator.py:77:48
+76	def encryptPan(pan):
+77	    encryptor = Cipher(algorithms.AES(PAN_KEY), modes.ECB()).encryptor()
+78	    padded = pan.encode().ljust(16, b" ")
+
+--------------------------------------------------
+>> Issue: [B505:weak_cryptographic_key] RSA key sizes below 2048 bits are considered breakable. 
+   Severity: Medium   Confidence: High
+   CWE: CWE-326 (https://cwe.mitre.org/data/definitions/326.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b505_weak_cryptographic_key.html
+   Location: ./tax_calculator.py:83:11
+82	def signingKey():
+83	    return rsa.generate_private_key(public_exponent=65537, key_size=1024)
+84	
+
+--------------------------------------------------
+>> Issue: [B318:blacklist] Using xml.dom.minidom.parseString to parse untrusted XML data is known to be vulnerable to XML attacks. Replace xml.dom.minidom.parseString with its defusedxml equivalent function or make sure defusedxml.defuse_stdlib() is called
+   Severity: Medium   Confidence: High
+   CWE: CWE-20 (https://cwe.mitre.org/data/definitions/20.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/blacklists/blacklist_calls.html#b313-b320-xml-bad-minidom
+   Location: ./tax_calculator.py:86:10
+85	def parseForm16(xml_text, strict=True):
+86	    doc = minidom.parseString(xml_text)
+87	    salaryText = doc.getElementsByTagName("salary")[0].firstChild.data
+
+--------------------------------------------------
+>> Issue: [B412:blacklist] Consider possible security implications associated with wsgiref.handlers.CGIHandler module.
+   Severity: High   Confidence: High
+   CWE: CWE-284 (https://cwe.mitre.org/data/definitions/284.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/blacklists/blacklist_imports.html#b412-import-httpoxy
+   Location: ./tax_calculator.py:92:4
+91	def runAsCgi(app, debug=False):
+92	    CGIHandler().run(app)
+93	
+
+--------------------------------------------------
+
+Code scanned:
+	Total lines of code: 92
+	Total lines skipped (#nosec): 0
+	Total potential issues skipped due to specifically being disabled (e.g., #nosec BXXX): 0
+
+Run metrics:
+	Total issues (by severity):
+		Undefined: 0
+		Low: 1
+		Medium: 3
+		High: 2
+	Total issues (by confidence):
+		Undefined: 0
+		Low: 0
+		Medium: 0
+		High: 6
+Files skipped (0):
